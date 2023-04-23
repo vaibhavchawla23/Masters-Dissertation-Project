@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: killswitch
+  namespace: killswitch-ns
+spec:
+  serviceAccountName: killswitch
+  containers:
+  - name: killswitch
+    image: localhost:32000/killswitch:v3
+    imagePullPolicy: IfNotPresent
+    env:
+    - name: APISERVER
+      value: "https://10.0.3.15:16443"
+    volumeMounts:
+    - name: only-volume
+      mountPath: /tmp/
+        #command: ["/bin/sh", "-c", "/tmp/cert-control.sh"]
+  volumes:
+  - name: only-volume
+    hostPath:     ## can be PVC instead for hostPath for log savings
+      path: /home/sysadmin/WORKING/
+  restartPolicy: OnFailure

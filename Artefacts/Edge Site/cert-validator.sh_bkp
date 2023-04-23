@@ -1,0 +1,25 @@
+#!/bin/bash
+ns='default'
+item=`microk8s kubectl get secret -n $ns | grep kubernetes.io/tls | awk '{ print $1}'`
+microk8s kubectl get secret -n $ns $item -o json | jq -r '.data."tls.crt"' | base64 -d > k8s-$ns-$item.crt
+microk8s kubectl get secret -n $ns $item -o json | jq -r '.data."tls.key"' | base64 -d > k8s-$ns-$item.key
+
+FILESIZE=$(stat -c%s "k8s-$ns-$item.crt")
+
+if [  FILESIZE < 4 ];then
+	echo "Empty cert files";
+else 
+	continue;
+fi
+
+curl --silent --show-error --fail --connect-timeout 3 --retry 2     http://192.168.56.108:8200/v1/pki_int/crl --output pki_int.crl
+
+presentcertserial=`openssl x509 -in k8s-$ns-$item.crt -text -noout | grep -A1 'Serial Number' | tail -n1| sed 's/\(.*\)/\U\1/' | sed 's/://g' | tr -d ' '`
+echo $presentcertserial
+openssl crl -inform DER -text -noout -in pki_int.crl | grep "Serial Number" | awk '{print $3}'
+
+     if [ $(openssl crl -inform DER -text -noout -in pki_int.crl | grep "Serial Number" | awk '{print $3}' | grep ${presentcertserial}) ]
+      then
+	  echo "Local CERTIFICATE Matched in the CRL recieved ${presentcertserial}"
+      microk8s kubectl delete secret -n $ns $item
+     fi

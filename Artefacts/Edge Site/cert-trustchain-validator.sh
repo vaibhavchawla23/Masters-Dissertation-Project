@@ -1,0 +1,78 @@
+#!/bin/bash
+
+cd "$(dirname "$(realpath "$0")")";
+
+for i in *.crt
+do
+   OK="true"
+
+   keyfile="`basename $i .crt`.key"
+   if test -f $keyfile
+   then
+      keysum=`openssl rsa -noout -modulus -in $keyfile | openssl md5`
+      crtsum=`openssl x509 -noout -modulus -in $i | openssl md5`
+      if [ "$keysum" != "$crtsum" ]
+      then
+         echo "ERROR key $keysum and crt $crtsum not matching, wrong md5 hash"
+         OK="false"
+      else
+         if [ "$1" == "-v" ]
+         then
+            echo "The MD5 hash for $i key and crt with SUM:$keysum vaildated OK"
+         fi
+      fi
+   else
+      echo "ERROR missing file $keyfile, unable to verify key matches crt"
+      OK="false"
+   fi
+
+   rm -rf cert-0[0-9] >/dev/null 2>&1
+   csplit -s -f cert- $i '%-----BEGIN CERTIFICATE-----%' '/-----BEGIN CERTIFICATE-----/' '{*}'
+
+
+   PREV=""
+   for crt in `ls -1 cert-0* | sort`
+   do
+      SUB="`openssl x509 -in $crt -text -noout | grep Subject: | sed \"s/Subject: //g\"| sed -e 's/^[ \t]*//'`"
+      ISS="`openssl x509 -in $crt -text -noout | grep Issuer: | sed \"s/Issuer: //g\"|  sed -e 's/^[ \t]*//'`"
+
+      echo $crt 
+      echo Subject: $SUB 
+      echo Issuer: $ISS 
+
+      if [ "$PREV" != "" ]
+      then
+         if [ "$PREV" != "$SUB" ]
+         then
+            OK="false"
+            echo "*** chain error ***"
+         fi
+      fi
+
+      if [ "$SUB" == "$ISS" ]
+      then
+         # should be last in chain, set PREV to nonsense to never match a following one
+         PREV="--"
+      else
+         PREV="$ISS"
+      fi
+   done
+
+   if [ "$PREV" != "--" ]
+   then
+      echo "ERROR last one not self signed!"
+      OK="false"
+   fi
+
+   if [ "$OK" != "true" ]
+   then
+      echo "ERROR $i"
+   else
+      if [ "$1" == "-v" ]
+      then
+         echo "Certificate trust chain is validated for: $i "
+      fi
+   fi
+
+   rm -rf cert-0[0-9] >/dev/null 2>&1
+done

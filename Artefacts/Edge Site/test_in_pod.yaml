@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cert-agent
+  namespace: killswitch-ns
+  labels:
+    role: cert-agent
+spec:
+  serviceAccountName: killswitch
+  containers:
+    - name: killswitch
+      image: localhost:32000/killswitch:v3
+      env:
+      - name: APISERVER
+        value: "https://10.0.3.15:16443"
+      volumeMounts:
+      - name: config-volume
+        mountPath: /tmp/
+  volumes:
+    - name: config-volume
+      configMap:
+        name: cert-control-script
+        defaultMode: 0777

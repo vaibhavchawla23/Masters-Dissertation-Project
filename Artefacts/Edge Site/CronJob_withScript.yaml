@@ -1,0 +1,34 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: killswitch
+  namespace: killswitch-ns
+spec:
+  schedule: "*/1 * * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: killswitch
+          containers:
+          - name: killswitch
+            image: localhost:32000/killswitch:v3
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: APISERVER
+              value: "https://10.0.3.15:16443"
+            volumeMounts:
+            - name: only-volume
+              mountPath: /mnt/
+                #command: ["/bin/sh" , "-c" , "/usr/bin/sleep 10"]
+                #command: ["/bin/sh", "-c", "echo Hello World in the pod"]
+                #command: ["/bin/sh", "-c", "ls -lrt /mnt/"]
+            command: ["/bin/bash", "-c", "/mnt/cert-validator.sh 2>&1 | tee  /mnt/killswitch.log"]
+                #command: ["/bin/sh" , "-c" , "/usr/bin/sleep 3600"]
+          volumes:
+          - name: only-volume
+            hostPath:     ## can be PVC instead for hostPath for log savings
+              path: /home/sysadmin/WORKING/
+          restartPolicy: OnFailure

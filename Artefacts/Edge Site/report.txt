@@ -1,0 +1,44 @@
+The MD5 hash for k8s-default-vault-cert-secret-tls.crt key and crt with SUM:MD5(stdin)= 8904588161019fe738fcc613482aa8b4 vaildated OK
+cert-00
+S: CN = alpha.edgesite.com
+I: CN = edgesite.com
+cert-01
+S: CN = edgesite.com
+I: CN = edgesite.com
+Certificate trust chain is validated for: k8s-default-vault-cert-secret-tls.crt 
+cert-00
+S: CN = alpha.edgesite.com
+I: CN = edgesite.com
+cert-01
+S: CN = edgesite.com
+I: CN = edgesite.com
+cert-00
+S: CN = alpha.edgesite.com
+I: CN = edgesite.com
+cert-01
+S: CN = edgesite.com
+I: CN = edgesite.com
+cert-00
+S: CN = alpha.edgesite.com
+I: CN = edgesite.com
+cert-01
+S: CN = edgesite.com
+I: CN = edgesite.com
+cert-00
+S: CN = alpha.edgesite.com
+I: CN = edgesite.com
+cert-01
+S: CN = edgesite.com
+I: CN = edgesite.com
+cert-00
+S: CN = alpha.edgesite.com
+I: CN = edgesite.com
+cert-01
+S: CN = edgesite.com
+I: CN = edgesite.com
+cert-00
+S: CN = alpha.edgesite.com
+I: CN = edgesite.com
+cert-01
+S: CN = edgesite.com
+I: CN = edgesite.com

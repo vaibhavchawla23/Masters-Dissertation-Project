@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minimal-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/issuer: vault-issuer
+spec:
+  tls:
+  - hosts:
+      - alpha.edgesite.com
+    secretName: vault-cert-secret-tls
+  rules:
+  - host: alpha.edgesite.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-pod-service
+            port:
+              number: 80
+  ingressClassName: nginx

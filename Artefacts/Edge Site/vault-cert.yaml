@@ -1,0 +1,12 @@
+ apiVersion: cert-manager.io/v1
+ kind: Certificate
+ metadata:
+   name: cert-from-vault
+   namespace: default
+ spec:
+   commonName: alpha.edgesite.com
+   secretName: vault-cert-secret-tls
+   issuerRef:
+     name: vault-issuer
+   dnsNames:
+   - alpha.edgesite.com

@@ -1,0 +1,32 @@
+apiVersion: v1
+data:
+  cert-validator.sh: |
+    #!/bin/bash
+    kubectl config set-cluster killswitch-cluster  --server=$APISERVER --insecure-skip-tls-verify
+    kubectl config set-credentials killswitch@killswitch-cluster --token=`cat /var/run/secrets/kubernetes.io/serviceaccount/token`
+    kubectl config set-context killswitch@killswitch-cluster --cluster=killswitch-cluster --user killswitch@killswitch-cluster --namespace=killswitch-ns
+    kubectl config use-context killswitch@killswitch-cluster
+    ns='default'
+    item=$(kubectl get secret -n $ns | grep kubernetes.io/tls | awk '{ print $1}')
+    rm -rf *.crt  *.crl *.key
+    kubectl get secret -n $ns "$item" -o json | jq -r '.data."tls.crt"' | base64 -d > k8s-$ns-"$item".crt
+    kubectl get secret -n $ns "$item" -o json | jq -r '.data."tls.key"' | base64 -d > k8s-$ns-"$item".key
+    presentcertserial=$(openssl x509 -in k8s-$ns-"$item".crt -text -noout | grep -A1 'Serial Number' | tail -n1| sed 's/\(.*\)/\U\1/' | sed 's/://g' | tr -d ' ')
+    echo "$presentcertserial"
+    FILESIZE=$(stat -c%s "k8s-$ns-$item.crt")
+
+    if [  "$FILESIZE" -lt 4 ];then
+            echo "Empty cert files CANNOT continue";
+    elif ! `curl --silent --show-error --fail --connect-timeout 3 --retry 2 http://192.168.56.108:8200/v1/pki_int/crl --output pki_int.crl`;then
+            echo "Cannot connect to Certificate Revocation List; Self-isolating";
+            kubectl delete secrets $ns $item
+    elif [ $(openssl crl -inform DER -text -noout -in pki_int.crl | grep "Serial Number" | awk '{print $3}' | grep "${presentcertserial}") ];then
+            echo "Local CERTIFICATE Matched in the CRL recieved ${presentcertserial}"
+            kubectl delete secret -n $ns $item my-vault-token
+    fi
+    /bin/sh -c /tmp1/cert-trustchain-validator.sh -v
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: cert-validator
+  namespace: killswitch-ns

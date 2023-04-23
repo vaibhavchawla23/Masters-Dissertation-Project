@@ -1,0 +1,17 @@
+Cluster "killswitch-cluster" set.
+User "killswitch@killswitch-cluster" set.
+Context "killswitch@killswitch-cluster" created.
+Switched to context "killswitch@killswitch-cluster".
+error: resource name may not be empty
+error: resource name may not be empty
+Could not read certificate from /mnt/k8s-default-.crt
+Unable to load certificate
+No Certificates Present
+curl: (7) Failed to connect to 192.168.56.108 port 8200 after 2 ms: Connection refused
+Cannot connect to Certificate Revocation List; Deleting local certificates!
+secret "cert-from-vault-7dlqk" deleted
+secret "vault-cert-secret-tls-kptgv" deleted
+Could not open file or uri for loading CRL from pki_int.crl
+40E7D1197E7F0000:error:16000069:STORE routines:ossl_store_get0_loader_int:unregistered scheme:../crypto/store/store_register.c:237:scheme=file
+40E7D1197E7F0000:error:80000002:system library:file_open:No such file or directory:../providers/implementations/storemgmt/file_store.c:267:calling stat(pki_int.crl)
+Unable to load CRL
